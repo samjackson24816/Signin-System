@@ -38,6 +38,7 @@ def get_user(users: dict, id: int) -> dict | None:
     return None
   else:
     return dict(val)
+  
       
 def validate_input(input: str) -> str | None:
 
@@ -47,6 +48,7 @@ def validate_input(input: str) -> str | None:
     return None
   else:
     return input
+  
   
 def toggle_user(users: dict, id: int) -> dict:
   signed_in = not bool(users[str(id)]["signed_in"])
@@ -58,22 +60,30 @@ def toggle_user(users: dict, id: int) -> dict:
 
   return users
 
-  
+
+def new_user(users: dict, id: int):
+  add: bool = easygui.boolbox("User not found.  Add new user with id " + str(id) + "?", "User not found", ("Add", "Cancel"), None, "Cancel", "Cancel")
+  if add:
+    input = easygui.enterbox("Enter the new user's username", "Add new user")
+    if not input is str:
+      return users
+    
+    name: str = str(input)
+    users[str(id)] = {
+      "name": name,
+      "signed_in": False
+    }
+    print("Added new user: " + name)
+  else:
+    print("Canceled adding new user")
+  return users
+
 
 def handle_given_id(users: dict, id: int) -> dict:
   user = get_user(users, id)
   if user == None:
     # New user
-    add: bool = easygui.boolbox("User not found.  Add new user with this card?", "User not found", ("Add", "Cancel"), None, "Cancel", "Cancel")
-    if add:
-      name: str = str(easygui.enterbox("Enter the new user's username", "Add new user"))
-      users[str(id)] = {
-        "name": name,
-        "signed_in": False
-      }
-      print("Added new user: " + name)
-    else:
-      print("Canceled adding new user")
+    users = new_user(users, id)
 
   else:
     # Toggle user state
@@ -91,15 +101,24 @@ def handle_card_input(input: str):
 
 
 input = list()
-
+processing = list([False])
 
 def on_key_press(event):
+  print(processing)
+  
+  if processing[0] == True:
+    return
+  
   print(event)
   char = str(event.name)
   if char == "enter" and len(input) > 0:
     print(input)
+    processing.clear()
+    processing.append(True) 
     handle_card_input(''.join(input))
     input.clear()
+    processing.clear()
+    processing.append(False)
   elif char.isalnum() and len(char) <= 1:
     input.append(str(char))
   else:
@@ -108,6 +127,8 @@ def on_key_press(event):
 
 
 keyboard.on_press(on_key_press)
+
+keyboard.read_event().name
 
 
 
