@@ -1,0 +1,18 @@
+{
+    "123123": {
+        "name": "Sam",
+        "signed_in": false
+    },
+    "234234": {
+        "name": "Bob",
+        "signed_in": true
+    },
+    "112233112233": {
+        "name": "Jeff",
+        "signed_in": false
+    },
+    "spacespaceaannddspacespaceiinnppuuttbackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacebackspacectrlssctrl223344223344": {
+        "name": "Joe",
+        "signed_in": false
+    }
+}
