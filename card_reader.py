@@ -145,7 +145,7 @@ while True:
   start_reading()
   while True:
     event = keyboard.read_event()
-    # print(event.event_type)
+    
     if event.event_type == 'down' or None: continue
 
     char = event.name
