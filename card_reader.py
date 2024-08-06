@@ -1,146 +1,129 @@
-from enum import Enum
+import os
+from datetime import datetime
 import keyboard
-import json
-import easygui
+import pygsheets
+import playsound3
+from gtts import gTTS
 
-''' 
-users.json is formatted like so:
-{
-    "123123": {
-        "name": "Sam",
-        "signed_in": false
-    },
-    "234234": {
-        "name": "Bob",
-        "signed_in": true
-    }
-}
-'''
+from sounds import *
 
-def load_users() -> dict:
-    with open('users.json', 'r') as infile:
-        users = dict(json.load(infile))
-    return users
+try:
+    client = pygsheets.authorize(service_file='./service-account-key.json')
+except:
+    print("Google Client was not authorized.  Check the error below:")
+    print(Exception)
+    quit(1)
 
+sh = client.open_by_key("13a-zji7i5hih5loJxG55xtRv_mPDe2VjCdHcyz-XXCU")
+add_data_ws = sh.worksheet_by_title("RFID Input")
+names_and_ids_ws = sh.worksheet_by_title("Names & IDs")
+form_input_ws = sh.worksheet_by_title("Form Input")
 
-def save_users(users: dict):
-    with open("users.json", "w") as outfile:
-        json.dump(users, outfile, indent=4)
+audio = Audio()
+
+audio.queue_sound(TextToSpeech("Signin system activated"))
 
 
-def get_user(users: dict, user_id: int) -> dict | None:
-    val = users.get(str(user_id))
-    if val is None:
+def add_row_to_sheet(time, name):
+    rows = add_data_ws.rows
+
+    vals = add_data_ws.get_values('B2', 'B' + str(rows))
+
+    # The sheet is 1-indexed, and we want the row after the current last one
+    idx = len(vals) + 2
+
+    add_data_ws.update_value("A" + str(idx), time)
+    add_data_ws.update_value("B" + str(idx), name)
+    return
+
+
+def search_sheet(ws, keys: list[str], key_col: str, val_col: str) -> list[str]:
+    rows = ws.rows
+    key_list = ws.get_values(str(key_col) + "1", str(key_col) + str(rows))
+
+    stuff = list()
+
+    for i in range(len(key_list)):
+        element = str(key_list[i][0])
+        if element in keys:
+            stuff.append(ws.get_value(str(val_col) + str(i + 1)))
+
+    return stuff
+
+
+def get_name_of_id(user_id: str) -> str | None:
+    names = search_sheet(names_and_ids_ws, [user_id], "A", "B")
+
+    if len(names) > 0:
+        return names[0]
+    else:
         return None
-    else:
-        return dict(val)
 
 
-def validate_input(input_str: str) -> str | None:
-    # Clean and validate input
-    cleaned_input = str.strip(str.lower(input_str))
-    if not str.isalnum(cleaned_input):
-        return None
-    else:
-        return input_str
+def get_all_ids(name: str) -> list[str]:
+    return search_sheet(names_and_ids_ws, [name], "B", "A")
 
 
-def toggle_user(users: dict, user_id: int) -> dict:
-    signed_in = not bool(users[str(user_id)]["signed_in"])
-    users[str(user_id)]["signed_in"] = signed_in
-    if signed_in:
-        print("Signed in!")
-    else:
-        print("Signed out")
+def get_login_status(user_ids: list[str]) -> bool:
+    form_data = search_sheet(form_input_ws, user_ids, "B", "B")
+    rfid_data = search_sheet(add_data_ws, user_ids, "B", "B")
 
-    return users
+    datapoints = len(form_data) + len(rfid_data)
+
+    return datapoints % 2 == 1
 
 
-def new_user(users: dict, user_id: int):
-    name = get_new_user(user_id)
-
-    if name is not None:
-        users[str(user_id)] = {
-            "name": name,
-            "signed_in": False
-        }
-
-    return users
-
-
-def handle_given_id(users: dict, user_id: int) -> dict:
-    user = get_user(users, user_id)
-    if user is None:
-        # New user
-        users = new_user(users, user_id)
-
-    else:
-        # Toggle user state
-        users = toggle_user(users, user_id)
-
-    return users
+def post_user_change(user_id: str):
+    now = str(datetime.now())
+    add_row_to_sheet(now, user_id)
 
 
 def handle_card_input(input_str: str):
-    user_id = validate_input(input_str)
-    users = load_users()
-    users = handle_given_id(users, user_id)
-    save_users(users)
+    # TODO: sanitize the input data
+    user_id = input_str
+    print("Read input " + user_id)
 
+    name = get_name_of_id(user_id)
 
-def start_reading_gui():
-    pass
+    match name:
+        case None:
+            print(
+                "This card is not linked to a name.  If you want to add this card to the database, add it into the "
+                "spreadsheet.")
+            audio.play_sound('noname')
+            audio.say(
+                "This card is not linked to a name.  If you want to add this card to the database, add it into the "
+                "spreadsheet.")
 
+        case _:
+            name = str(name)
+            print("Hello " + name)
+            text_to_say = "Hello " + name + "! "
 
-def start_reading_cli():
-    print("Recording inputs")
+            ids = get_all_ids(name)
 
+            signed_in = get_login_status(ids)
 
-def get_new_user_cli(user_id: int) -> str | None:
-    add = input("User not found.  Add new user with id " + str(user_id) + "?\nEnter Y to continue: ")
-    if not isinstance(add, str): return None
-    if not str.capitalize(add) == "Y": return None
+            match signed_in:
+                case False:
+                    print("You are now signed in")
+                    audio.play_sound('signin')
+                    text_to_say += "You are now signed in"
+                case True:
+                    print("You are now signed out")
+                    audio.play_sound('signout')
+                    text_to_say += "You are now signed out"
 
-    name = input("Enter the new user's username: ")
-    if not isinstance(name, str): return None
+            audio.say(text_to_say)
 
-    print("New user added!  Name: " + name + "  Id: " + str(user_id))
-    return name
+    # We do this regardless of whether the input is linked to a name so we can see the invalid inputs on sheet and debug if there are problems
+    post_user_change(user_id)
 
-
-def get_new_user_gui(user_id: int) -> str | None:
-    add: bool = easygui.boolbox("User not found.  Add new user with id " + str(user_id) + "?", "User not found",
-                                ["Add", "Cancel"], None, "Cancel", "Cancel")
-    if not add: return None
-
-    invar = easygui.enterbox("Enter the new user's username", "Add new user")
-
-    if not isinstance(invar, str): return None
-
-    return invar
-
-
-Mode = Enum('Mode', ["CLI", "GUI"])
-
-mode = Mode.CLI
-
-get_new_user = None
-start_reading = None
-
-match mode:
-    case Mode.CLI:
-        get_new_user = get_new_user_cli
-        start_reading = start_reading_cli
-    case Mode.GUI:
-        get_new_user = get_new_user_gui
-        start_reading = start_reading_gui
 
 while True:
     instr = ""
-    start_reading()
     while True:
         event = keyboard.read_event()
-        # print(event.event_type)
         if event.event_type == 'down' or None: continue
 
         char = event.name
@@ -157,5 +140,4 @@ while True:
         print(char)
 
     # Once we get a full input
-    print(instr)
     handle_card_input(str(instr))
