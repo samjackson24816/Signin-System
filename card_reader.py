@@ -1,3 +1,5 @@
+from enum import Enum
+from tkinter import W
 import keyboard        
 import json
 import easygui
@@ -16,10 +18,6 @@ users.json is formatted like so:
 }
 
 '''
-
-
-
-
 
 def load_users() -> dict:
   with open('users.json', 'r') as infile:
@@ -60,33 +58,11 @@ def toggle_user(users: dict, id: int) -> dict:
 
   return users
 
-def get_new_user_gui(id: int) -> str | None:
-  add: bool = easygui.boolbox("User not found.  Add new user with id " + str(id) + "?", "User not found", ("Add", "Cancel"), None, "Cancel", "Cancel")
-  if not add: return None
-
-  invar = easygui.enterbox("Enter the new user's username", "Add new user")
-
-  if not isinstance(invar, str): return None
-
-  return invar
-
-def get_new_user_cli(id: int) -> str | None:
-  add = input("User not found.  Add new user with id " + str(id) + "?\nEnter Y to continue: ")
-  if not isinstance(add, str): return None
-  if not str.capitalize(add) == "Y": return None
-
-  name = input("Enter the new user's username: ")
-  if not isinstance(name, str): return None
-
-  print("New user added!  Name: " + name + "  Id: " + id)
-  return name
-
-
 
 
 
 def new_user(users: dict, id: int):
-  name = get_new_user_cli(id)
+  name = get_new_user(id)
 
   if not name == None:
     users[str(id)] = {
@@ -117,10 +93,56 @@ def handle_card_input(instr: str):
   save_users(users)
 
 
+def start_reading_gui():
+  pass
+
+
+def start_reading_cli():
+  print("Recording inputs")
+
+
+def get_new_user_cli(id: int) -> str | None:
+  add = input("User not found.  Add new user with id " + str(id) + "?\nEnter Y to continue: ")
+  if not isinstance(add, str): return None
+  if not str.capitalize(add) == "Y": return None
+
+  name = input("Enter the new user's username: ")
+  if not isinstance(name, str): return None
+
+  print("New user added!  Name: " + name + "  Id: " + id)
+  return name
+
+
+def get_new_user_gui(id: int) -> str | None:
+  add: bool = easygui.boolbox("User not found.  Add new user with id " + str(id) + "?", "User not found", ("Add", "Cancel"), None, "Cancel", "Cancel")
+  if not add: return None
+
+  invar = easygui.enterbox("Enter the new user's username", "Add new user")
+
+  if not isinstance(invar, str): return None
+
+  return invar
+
+
+
+Mode = Enum('Mode', ["CLI", "GUI"])
+
+mode = Mode.CLI
+
+get_new_user = None
+start_reading = None 
+
+match mode:
+  case Mode.CLI:
+    get_new_user = get_new_user_cli
+    start_reading = start_reading_cli    
+  case Mode.GUI:
+    get_new_user = get_new_user_gui
+    start_reading = start_reading_gui
 
 while True:
   instr = ""
-
+  start_reading()
   while True:
     event = keyboard.read_event()
     # print(event.event_type)
