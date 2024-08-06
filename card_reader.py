@@ -17,7 +17,6 @@ users.json is formatted like so:
 }
 '''
 
-
 def load_users() -> dict:
     with open('users.json', 'r') as infile:
         users = dict(json.load(infile))
