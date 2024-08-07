@@ -1,3 +1,7 @@
+# Info
+I've tried to keep as much dependencies as possible within this repo, in order to make it easier for me to transfer this project to another machine depending on how we decide to implement it.
+This is why I've added the virtual environment even though you're usually not supposed to do that.
+The project also depends on a "client_secret.json" file and a "google_oAuth....json" file, which I haven't added to this repo because they contain my google account api keys.
 # Progress
 ## So Far
 - system for reading in card data
