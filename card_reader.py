@@ -1,4 +1,6 @@
 import os
+import sys
+import threading
 from datetime import datetime
 import keyboard
 import pygsheets
@@ -87,10 +89,11 @@ def handle_card_input(input_str: str):
             print(
                 "This card is not linked to a name.  If you want to add this card to the database, add it into the "
                 "spreadsheet.")
-            audio.play_sound('noname')
-            audio.say(
+            audio.queue_sound(SoundEffect("noname"))
+
+            audio.queue_sound(TextToSpeech(
                 "This card is not linked to a name.  If you want to add this card to the database, add it into the "
-                "spreadsheet.")
+                "spreadsheet."))
 
         case _:
             name = str(name)
@@ -104,37 +107,48 @@ def handle_card_input(input_str: str):
             match signed_in:
                 case False:
                     print("You are now signed in")
-                    audio.play_sound('signin')
+                    audio.queue_sound(SoundEffect('signin'))
                     text_to_say += "You are now signed in"
                 case True:
                     print("You are now signed out")
-                    audio.play_sound('signout')
+                    audio.queue_sound(SoundEffect('signout'))
                     text_to_say += "You are now signed out"
 
-            audio.say(text_to_say)
+            audio.queue_sound(TextToSpeech(text_to_say))
 
     # We do this regardless of whether the input is linked to a name so we can see the invalid inputs on sheet and debug if there are problems
     post_user_change(user_id)
 
 
-while True:
-    instr = ""
+def run_input():
+    print("Program running --- press ESC to quit")
+
     while True:
-        event = keyboard.read_event()
-        if event.event_type == 'down' or None: continue
+        instr = ""
+        while True:
+            event = keyboard.read_event()
+            print(event.name)
+            if event.name == 'esc' or event.name == 'caps lock':
+                print("Pressed ESC --- quitting immediately")
+                quit(0)
 
-        char = event.name
 
-        if char is None: continue
+            if event.event_type == 'down' or None: continue
 
-        if char == "enter" and len(instr) > 0: break
+            char = event.name
 
-        if len(char) > 1: continue
-        if not char.isalnum(): continue
+            if char is None: continue
 
-        instr += char
+            if char == "enter" and len(instr) > 0: break
 
-        print(char)
+            if len(char) > 1: continue
+            if not char.isalnum(): continue
 
-    # Once we get a full input
-    handle_card_input(str(instr))
+            instr += char
+
+            print(char)
+
+        # Once we get a full input
+        handle_card_input(str(instr))
+
+run_input()

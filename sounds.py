@@ -93,6 +93,7 @@ class Audio:
     def __init__(self):
         audio_queue = Thread(target=play_sounds, args=[self.sound_queue])
 
+        audio_queue.daemon = True
         audio_queue.start()
 
     def queue_sound(self, sound: Sound):
