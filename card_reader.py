@@ -2,16 +2,13 @@ import os
 from datetime import datetime
 import keyboard
 import pygsheets
-import playsound3
-from gtts import gTTS
 
 from sounds import *
 
 try:
-    client = pygsheets.authorize(service_file='./service-account-key.json')
+    client = pygsheets.authorize(service_file='service-account-key.json')
 except:
     print("Google Client was not authorized.  Check the error below:")
-    print(Exception)
     quit(1)
 
 sh = client.open_by_key("13a-zji7i5hih5loJxG55xtRv_mPDe2VjCdHcyz-XXCU")
