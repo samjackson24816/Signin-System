@@ -9,12 +9,12 @@ def saver(saving):
     while True:
         print("Syncing...")
         saving["val"] = True
-        remote.load_remote_data()
         remote.save_new_logs_to_remote()
+        remote.load_remote_data()
         saving["val"] = False
         print("Done syncing")
 
-        sleep(10)
+        sleep(20)
 
 
 def start_saving(saving):

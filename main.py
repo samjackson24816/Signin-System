@@ -52,19 +52,10 @@ def handle_card_input(input_str: str):
     log_input(user_id)
 
 
-def sync(remote: remote_data.RemoteData):
-    print("Syncing...")
-    remote.load_remote_data()
-    remote.save_new_logs_to_remote()
-    print("Done syncing")
-
-
 SAVE_SPACING_SECONDS = 10
 
 def run_input():
     print("Program running --- press ESC to quit")
-    remote = remote_data.RemoteData()
-    last_log_time = time.time()
 
     saving = {"val": False}
     remote_recorder.start_saving(saving)
@@ -95,8 +86,6 @@ def run_input():
 
                 instr += char
 
-                print(char)
-
             except KeyboardInterrupt as e:
                 print("Keyboard Interrupt --- quitting immediately")
                 quit(0)
@@ -109,12 +98,6 @@ def run_input():
 
         handle_card_input(str(instr))
 
-
-        now = time.time()
-
-        if now - last_log_time > SAVE_SPACING_SECONDS:
-            # sync(remote)
-            last_log_time = time.time()
 
 if __name__ == "__main__":
     run_input()

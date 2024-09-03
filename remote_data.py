@@ -42,11 +42,14 @@ class RemoteData:
     def save_new_logs_to_remote(self):
         data = get_json_file_data("new_logs")
 
+
         local_data.clear_new_logs()
+
 
         rows = self.rfid_input_ws.rows
 
         new_rows = data["times_and_ids"]
+        new_rows.pop(0)
 
         for e in new_rows:
             self.rfid_input_ws.add_rows(1)
