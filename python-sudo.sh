@@ -1,1 +1,1 @@
-sudo -S venv/bin/python card_reader.py
+sudo -S venv/bin/python main.py

@@ -1,80 +1,17 @@
-import os
-import sys
-import threading
+import time
 from datetime import datetime
+
 import keyboard
-import pygsheets
 
-from sounds import *
-
-try:
-    client = pygsheets.authorize(service_file='service-account-key.json')
-except:
-    print("Google Client was not authorized.  Check the error below:")
-    quit(1)
-
-sh = client.open_by_key("13a-zji7i5hih5loJxG55xtRv_mPDe2VjCdHcyz-XXCU")
-add_data_ws = sh.worksheet_by_title("RFID Input")
-names_and_ids_ws = sh.worksheet_by_title("Names & IDs")
-form_input_ws = sh.worksheet_by_title("Form Input")
+import remote_data
+import remote_recorder
+from local_data import get_user_data, log_input
+from sounds import Audio, TextToSpeech, SoundEffect
 
 audio = Audio()
 
 audio.queue_sound(TextToSpeech("Signin system activated"))
 
-
-def add_row_to_sheet(time, name):
-    rows = add_data_ws.rows
-
-    vals = add_data_ws.get_values('B2', 'B' + str(rows))
-
-    # The sheet is 1-indexed, and we want the row after the current last one
-    idx = len(vals) + 2
-
-    add_data_ws.update_value("A" + str(idx), time)
-    add_data_ws.update_value("B" + str(idx), name)
-    return
-
-
-def search_sheet(ws, keys: list[str], key_col: str, val_col: str) -> list[str]:
-    rows = ws.rows
-    key_list = ws.get_values(str(key_col) + "1", str(key_col) + str(rows))
-
-    stuff = list()
-
-    for i in range(len(key_list)):
-        element = str(key_list[i][0])
-        if element in keys:
-            stuff.append(ws.get_value(str(val_col) + str(i + 1)))
-
-    return stuff
-
-
-def get_name_of_id(user_id: str) -> str | None:
-    names = search_sheet(names_and_ids_ws, [user_id], "A", "B")
-
-    if len(names) > 0:
-        return names[0]
-    else:
-        return None
-
-
-def get_all_ids(name: str) -> list[str]:
-    return search_sheet(names_and_ids_ws, [name], "B", "A")
-
-
-def get_login_status(user_ids: list[str]) -> bool:
-    form_data = search_sheet(form_input_ws, user_ids, "B", "B")
-    rfid_data = search_sheet(add_data_ws, user_ids, "B", "B")
-
-    datapoints = len(form_data) + len(rfid_data)
-
-    return datapoints % 2 == 1
-
-
-def post_user_change(user_id: str):
-    now = str(datetime.now())
-    add_row_to_sheet(now, user_id)
 
 
 def handle_card_input(input_str: str):
@@ -82,7 +19,7 @@ def handle_card_input(input_str: str):
     user_id = input_str
     print("Read input " + user_id)
 
-    name = get_name_of_id(user_id)
+    name, signed_in = get_user_data(user_id)
 
     match name:
         case None:
@@ -100,10 +37,6 @@ def handle_card_input(input_str: str):
             print("Hello " + name)
             text_to_say = "Hello " + name + "! "
 
-            ids = get_all_ids(name)
-
-            signed_in = get_login_status(ids)
-
             match signed_in:
                 case False:
                     print("You are now signed in")
@@ -116,12 +49,25 @@ def handle_card_input(input_str: str):
 
             audio.queue_sound(TextToSpeech(text_to_say))
 
-    # We do this regardless of whether the input is linked to a name so we can see the invalid inputs on sheet and debug if there are problems
-    post_user_change(user_id)
+    log_input(user_id)
 
+
+def sync(remote: remote_data.RemoteData):
+    print("Syncing...")
+    remote.load_remote_data()
+    remote.save_new_logs_to_remote()
+    print("Done syncing")
+
+
+SAVE_SPACING_SECONDS = 10
 
 def run_input():
     print("Program running --- press ESC to quit")
+    remote = remote_data.RemoteData()
+    last_log_time = time.time()
+
+    saving = {"val": False}
+    remote_recorder.start_saving(saving)
 
     while True:
         instr = ""
@@ -129,6 +75,7 @@ def run_input():
 
             try:
                 event = keyboard.read_event()
+
 
                 if event.name == 'esc' or event.name == 'caps lock':
                     print("Pressed ESC --- quitting immediately")
@@ -156,6 +103,18 @@ def run_input():
 
 
         # Once we get a full input
+
+        while saving["val"]:
+            pass
+
         handle_card_input(str(instr))
 
-run_input()
+
+        now = time.time()
+
+        if now - last_log_time > SAVE_SPACING_SECONDS:
+            # sync(remote)
+            last_log_time = time.time()
+
+if __name__ == "__main__":
+    run_input()
