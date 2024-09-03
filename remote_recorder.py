@@ -14,7 +14,7 @@ def saver(saving):
         saving["val"] = False
         print("Done syncing")
 
-        sleep(20)
+        sleep(5)
 
 
 def start_saving(saving):

@@ -62,10 +62,12 @@ def run_input():
 
     while True:
         instr = ""
+        '''
         while True:
 
             try:
                 event = keyboard.read_event()
+                print(event.name)
 
 
                 if event.name == 'esc' or event.name == 'caps lock':
@@ -90,8 +92,10 @@ def run_input():
                 print("Keyboard Interrupt --- quitting immediately")
                 quit(0)
 
+        '''
 
         # Once we get a full input
+        instr = input()
 
         while saving["val"]:
             pass

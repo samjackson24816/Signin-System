@@ -7,8 +7,8 @@ For now at least, the system is meant to be run on a laptop, through a terminal.
 
 ## Progress
 ### So Far
-- system for reading in card data
-- interaction with remote google sheet
+- full local data saving system
+- sheet syncing system
 - system for logging cards, validating users, and signing users in
 - generic sound queuing system with text-to-speech and sound effects
 

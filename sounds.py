@@ -37,7 +37,7 @@ class TextToSpeech(Sound):
                 tts.save(f'./tts/{filename}.mp3')
             except:
                 print("Text to speech is not working.  It might need internet, or something else might be broken.")
-                print(text)
+                print(self.text)
 
         playsound3.playsound(f'./tts/{filename}.mp3', True)
 
