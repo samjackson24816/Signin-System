@@ -6,12 +6,11 @@ import keyboard
 import remote_data
 import remote_recorder
 from local_data import get_user_data, log_input
-from sounds import Audio, TextToSpeech, SoundEffect
+from sounds import SoundPlayer, Sound
 
-audio = Audio()
+player = SoundPlayer()
 
-audio.queue_sound(TextToSpeech("Signin system activated"))
-
+player.push_sound(Sound(Sound.SoundType.TTS, "Signin System Activated"))
 
 
 def handle_card_input(input_str: str):
@@ -26,9 +25,9 @@ def handle_card_input(input_str: str):
             print(
                 "This card is not linked to a name.  If you want to add this card to the database, add it into the "
                 "spreadsheet.")
-            audio.queue_sound(SoundEffect("noname"))
+            player.push_sound(Sound(Sound.SoundType.SFX, "noname"))
 
-            audio.queue_sound(TextToSpeech(
+            player.queue_sound(Sound(Sound.SoundType.TTS,
                 "This card is not linked to a name.  If you want to add this card to the database, add it into the "
                 "spreadsheet."))
 
@@ -40,14 +39,14 @@ def handle_card_input(input_str: str):
             match signed_in:
                 case False:
                     print("You are now signed in")
-                    audio.queue_sound(SoundEffect('signin'))
+                    player.push_sound(Sound(Sound.SoundType.SFX, 'signin'))
                     text_to_say += "You are now signed in"
                 case True:
                     print("You are now signed out")
-                    audio.queue_sound(SoundEffect('signout'))
+                    player.push_sound(Sound(Sound.SoundType.SFX, 'signout'))
                     text_to_say += "You are now signed out"
 
-            audio.queue_sound(TextToSpeech(text_to_say))
+            player.queue_sound(Sound(Sound.SoundType.TTS, text_to_say))
 
     log_input(user_id)
 

@@ -206,4 +206,3 @@ def audio_test():
     player.push_sound(Sound(Sound.SoundType.TTS, "world"))
     sleep(8)
 
-audio_test()
