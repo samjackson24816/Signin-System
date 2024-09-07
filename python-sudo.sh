@@ -1,1 +1,0 @@
-sudo -S venv/bin/python card_reader.py
