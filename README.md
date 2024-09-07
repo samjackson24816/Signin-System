@@ -1,5 +1,4 @@
 # Info
-<<<<<<< HEAD
 This system reads in input from an RFID card reader and signs a user in or out using a Google sheet as a remote database.
 The Google sheet stores user ids mapped to names, records a log of all card inputs, takes in input from a Google form as another login system, and compiles all that data into a dashboard showing each user's monthly and weekly hours.
 This system notifies the user of their status, letting them know if their card was verified, calling them by name, and announcing whether they are now signed in or signed out.  It uses text-to-speech and sound effects to communicate with the user.
