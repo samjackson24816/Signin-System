@@ -1,4 +1,4 @@
-import pygsheets
+
 from pygsheets import Worksheet, authorize
 
 import local_data
