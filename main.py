@@ -33,20 +33,37 @@ def handle_card_input(input_str: str):
     log_input(user_id)
 
 
-SAVE_SPACING_SECONDS = 10
+
+SAVE_SPACE_SECONDS = 5 
+
 
 def run_input():
     print("Program running --- press ESC to quit")
 
     saving = {"val": False}
-    remote_recorder.start_saving(saving)
+    remote_recorder.start_saving(saving, SAVE_SPACE_SECONDS)
 
     while True:
         
-        instr = input()
+        instr = ""
+
+        got_input = False
+
+        while not got_input:
+
+            try:
+                instr = input()
+                got_input = True
+            except KeyboardInterrupt:
+                print("Quitting program")
+                exit()
 
         while saving["val"]:
-            pass
+            try:
+                pass
+            except KeyboardInterrupt:
+                print("Quitting program")
+                exit()
 
         handle_card_input(str(instr))
 

@@ -4,7 +4,7 @@ from time import sleep
 from remote_data import RemoteData
 
 
-def saver(saving):
+def saver(saving, save_space: float):
     remote = RemoteData()
     while True:
         print("Syncing...")
@@ -14,11 +14,11 @@ def saver(saving):
         saving["val"] = False
         print("Done syncing")
 
-        sleep(5)
+        sleep(save_space)
 
 
-def start_saving(saving):
-    saver_thread = Thread(target=saver, args=[saving])
+def start_saving(saving, save_space):
+    saver_thread = Thread(target=saver, args=[saving, save_space])
     saver_thread.daemon = True
     saver_thread.start()
 
